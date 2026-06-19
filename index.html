@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>포토 저지 — Gemini AI 사진 심사</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#15120D;--bg2:#1C1812;--bg3:#241F17;--bg4:#2D261C;
+  --gold:#E8B84B;--gold2:#C99A2E;--gold3:rgba(232,184,75,0.12);--goldb:rgba(232,184,75,0.32);
+  --silver:#C9CDD3;--bronze:#CD8B5C;
+  --cream:#F4ECDC;--cream2:#A99A80;--cream3:#5A4F3D;
+  --bd:rgba(255,255,255,0.07);--bd2:rgba(255,255,255,0.14);
+  --err:#E0625C;--mono:'Courier New',Consolas,monospace;
+  --r:12px;--r2:16px;
+}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--cream);
+  font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;
+  font-size:14px;min-height:100vh;
+  background-image:radial-gradient(circle at 20% 0%, rgba(232,184,75,0.06), transparent 45%),
+                    radial-gradient(circle at 90% 80%, rgba(232,184,75,0.04), transparent 50%);
+}
+a{color:var(--gold)}
+
+.app{max-width:1080px;margin:0 auto;padding:32px 24px 80px;display:flex;flex-direction:column;gap:28px}
+
+/* HEADER */
+.header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:10px 0 6px}
+.header-badge{
+  font-size:11px;color:var(--gold);background:var(--gold3);
+  border:.5px solid var(--goldb);border-radius:20px;
+  padding:5px 14px;font-family:var(--mono);letter-spacing:1px
+}
+.header h1{font-size:30px;font-weight:800;letter-spacing:-0.8px;
+  background:linear-gradient(135deg,var(--cream),var(--gold));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.header p{font-size:13px;color:var(--cream2);max-width:480px;line-height:1.6}
+
+/* UPLOAD ZONE */
+.upload-zone{
+  border:1.5px dashed var(--bd2);border-radius:var(--r2);
+  padding:36px 24px;text-align:center;cursor:pointer;
+  transition:all .2s;background:var(--bg2);position:relative
+}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--gold);background:var(--gold3)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-icon{font-size:36px;color:var(--cream3);margin-bottom:10px;display:block}
+.upload-title{font-size:15px;font-weight:700;margin-bottom:5px}
+.upload-sub{font-size:12px;color:var(--cream2);line-height:1.6}
+
+/* API KEY BAR */
+.apikey-bar{
+  display:flex;gap:8px;align-items:center;
+  background:var(--bg2);border:.5px solid var(--bd2);
+  border-radius:10px;padding:10px 12px
+}
+.apikey-bar i{color:var(--cream3);font-size:16px;flex-shrink:0}
+.apikey-bar input{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--cream);font-size:12px;font-family:var(--mono)
+}
+.apikey-bar input::placeholder{color:var(--cream3)}
+.apikey-status{font-size:11px;padding:3px 9px;border-radius:6px;font-family:var(--mono);flex-shrink:0}
+.apikey-status.ok{background:rgba(76,175,110,0.15);color:#7DD89A}
+.apikey-status.no{background:rgba(224,98,92,0.12);color:#F09595}
+
+/* THUMBNAIL GRID (업로드 후, 분석 전) */
+.thumb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.thumb-item{
+  position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;
+  border:1.5px solid var(--bd2);background:var(--bg3)
+}
+.thumb-item img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb-remove{
+  position:absolute;top:5px;right:5px;width:20px;height:20px;
+  border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:12px;border:none
+}
+.thumb-name{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(transparent,rgba(0,0,0,0.75));
+  color:#fff;font-size:10px;padding:14px 6px 5px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+
+/* ACTION BTN */
+.btn-judge{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#15120D;border:none;border-radius:12px;
+  padding:14px;font-size:15px;font-weight:800;cursor:pointer;
+  transition:transform .15s,box-shadow .15s;letter-spacing:-0.2px;
+  box-shadow:0 6px 20px rgba(232,184,75,0.18)
+}
+.btn-judge:hover{transform:translateY(-1px);box-shadow:0 8px 26px rgba(232,184,75,0.28)}
+.btn-judge:active{transform:scale(0.99)}
+.btn-judge:disabled{background:var(--cream3);color:var(--bg);cursor:not-allowed;box-shadow:none;transform:none}
+
+.btn-ghost{
+  background:transparent;border:.5px solid var(--bd2);color:var(--cream2);
+  border-radius:10px;padding:9px 16px;font-size:12px;cursor:pointer;
+  font-family:inherit;transition:all .15s
+}
+.btn-ghost:hover{border-color:var(--goldb);color:var(--gold)}
+
+/* PROGRESS */
+.progress-wrap{display:flex;flex-direction:column;gap:10px;align-items:center;padding:30px 0}
+.progress-spinner{width:42px;height:42px;border:3px solid var(--bd2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progress-text{font-size:13px;color:var(--cream2)}
+.progress-bar-track{width:280px;height:5px;background:var(--bd2);border-radius:3px;overflow:hidden}
+.progress-bar-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .4s ease}
+
+/* ERROR */
+.error-box{
+  background:rgba(224,98,92,0.08);border:.5px solid rgba(224,98,92,0.3);
+  border-radius:10px;padding:14px 16px;font-size:13px;color:#F09595;
+  display:flex;gap:10px;align-items:flex-start;line-height:1.6
+}
+.error-box i{font-size:18px;flex-shrink:0;margin-top:1px}
+
+/* RESULTS */
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.results-title{font-size:18px;font-weight:800;letter-spacing:-0.3px}
+.results-title span{color:var(--gold)}
+
+.rank-list{display:flex;flex-direction:column;gap:14px}
+.rank-card{
+  display:flex;gap:18px;background:var(--bg2);
+  border:1px solid var(--bd2);border-radius:var(--r2);
+  padding:18px;animation:fadeUp .4s ease;position:relative;overflow:hidden
+}
+.rank-card.r1{border-color:rgba(232,184,75,0.5);background:linear-gradient(135deg,var(--bg2),rgba(232,184,75,0.05))}
+.rank-card.r2{border-color:rgba(201,205,211,0.35)}
+.rank-card.r3{border-color:rgba(205,139,92,0.35)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.rank-medal{
+  position:absolute;top:-2px;left:-2px;
+  width:54px;height:54px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:900;font-family:var(--mono);
+  border-bottom-right-radius:16px;
+  color:#15120D;
+}
+.rank-medal.m1{background:linear-gradient(135deg,#F2D27A,#D9A93A)}
+.rank-medal.m2{background:linear-gradient(135deg,#E2E5E9,#B5BAC2)}
+.rank-medal.m3{background:linear-gradient(135deg,#E0A271,#B97847)}
+.rank-medal.m4,.rank-medal.m5{background:var(--bg4);color:var(--cream2)}
+
+.rank-photo{
+  width:140px;height:140px;border-radius:12px;overflow:hidden;
+  flex-shrink:0;background:var(--bg3);margin-left:8px
+}
+.rank-photo img{width:100%;height:100%;object-fit:cover;display:block}
+
+.rank-info{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.rank-name{font-size:17px;font-weight:800;letter-spacing:-0.3px;color:var(--cream)}
+.rank-score-row{display:flex;align-items:center;gap:10px}
+.rank-score{
+  font-family:var(--mono);font-size:13px;font-weight:700;color:var(--gold);
+  background:var(--gold3);border:.5px solid var(--goldb);
+  border-radius:6px;padding:2px 9px
+}
+.rank-orig-name{font-size:11px;color:var(--cream3);font-family:var(--mono)}
+.rank-reason{font-size:13px;color:var(--cream2);line-height:1.65}
+.rank-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.rank-tag{
+  font-size:11px;padding:3px 9px;border-radius:6px;
+  background:var(--bg3);border:.5px solid var(--bd);color:var(--cream2)
+}
+
+/* SUB SCORES */
+.sub-scores{display:flex;gap:14px;margin-top:4px;flex-wrap:wrap}
+.sub-score{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--cream3)}
+.sub-score-bar{width:44px;height:4px;background:var(--bd2);border-radius:2px;overflow:hidden}
+.sub-score-fill{height:100%;background:var(--gold);border-radius:2px}
+
+/* OTHERS (순위 밖) */
+.others-section{margin-top:6px}
+.others-label{font-size:11px;color:var(--cream3);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.others-label::after{content:'';flex:1;height:1px;background:var(--bd)}
+.others-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.other-item{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.other-item img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.other-item-info{padding:8px 9px}
+.other-item-name{font-size:11px;font-weight:700;color:var(--cream2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.other-item-score{font-size:10px;color:var(--cream3);font-family:var(--mono);margin-top:2px}
+
+/* RESET */
+.reset-row{display:flex;justify-content:center;margin-top:10px}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
+
+/* ── CRITERIA PANEL ── */
+.criteria-panel{
+  background:var(--bg2);border:.5px solid var(--bd2);
+  border-radius:var(--r2);padding:18px 20px;
+  display:flex;flex-direction:column;gap:16px
+}
+.crit-block{display:flex;flex-direction:column;gap:9px}
+.crit-label{
+  font-size:11px;color:var(--cream2);font-weight:700;
+  letter-spacing:.6px;text-transform:uppercase;
+  display:flex;align-items:center;gap:6px
+}
+.crit-label i{color:var(--gold);font-size:14px}
+.crit-hint{font-size:11px;color:var(--cream3);margin-top:-4px}
+
+.crit-textarea{
+  width:100%;background:var(--bg3);border:.5px solid var(--bd2);
+  border-radius:9px;color:var(--cream);font-size:13px;
+  padding:10px 12px;outline:none;resize:vertical;min-height:54px;
+  font-family:inherit;line-height:1.55;transition:border-color .2s
+}
+.crit-textarea:focus{border-color:var(--gold)}
+.crit-textarea::placeholder{color:var(--cream3)}
+
+/* KEYWORD CHIPS */
+.kw-grid{display:flex;flex-wrap:wrap;gap:7px}
+.kw-chip{
+  padding:6px 13px;border-radius:18px;font-size:12px;
+  cursor:pointer;border:.5px solid var(--bd2);
+  background:var(--bg3);color:var(--cream2);
+  transition:all .15s;user-select:none
+}
+.kw-chip.on{background:var(--gold3);border-color:var(--goldb);color:var(--gold);font-weight:700}
+.kw-chip:hover:not(.on){border-color:var(--cream3)}
+
+/* JUDGE PERSONA SELECT */
+.judge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+.judge-card{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:10px;cursor:pointer;
+  border:.5px solid var(--bd2);background:var(--bg3);
+  transition:all .15s
+}
+.judge-card.on{border-color:var(--goldb);background:var(--gold3)}
+.judge-card-icon{
+  width:32px;height:32px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;background:var(--bg4);color:var(--cream2)
+}
+.judge-card.on .judge-card-icon{background:var(--gold);color:#15120D}
+.judge-card-text{display:flex;flex-direction:column;gap:1px;min-width:0}
+.judge-card-name{font-size:12px;font-weight:700;color:var(--cream);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.judge-card-desc{font-size:10px;color:var(--cream3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.crit-toggle-row{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.crit-toggle-row:hover .crit-label{color:var(--gold)}
+.crit-chevron{transition:transform .2s;color:var(--cream3);font-size:16px}
+.crit-chevron.open{transform:rotate(180deg)}
+.crit-body{display:flex;flex-direction:column;gap:16px}
+.crit-body.collapsed{display:none}
+
+@media(max-width:560px){
+  .rank-card{flex-direction:column}
+  .rank-photo{width:100%;height:200px;margin-left:0;margin-top:30px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <span class="header-badge">GEMINI AI PHOTO JUDGE</span>
+    <h1>포토 저지</h1>
+    <p>사진을 올리면 AI가 인물샷·구도·조명 등 사진 자체의 품질을 기준으로 심사해 1위부터 5위까지 순위를 매기고, 각 사진에 이름을 지어드립니다.</p>
+  </div>
+
+  <!-- API KEY -->
+  <div class="apikey-bar">
+    <i class="ti ti-key" aria-hidden="true"></i>
+    <input type="password" id="apiKeyInput" placeholder="Google AI (Gemini) API 키 — 이 브라우저에만 저장되며 서버로 전송되지 않습니다" oninput="checkApiKey()">
+    <span class="apikey-status no" id="apiKeyStatus">미입력</span>
+  </div>
+
+  <!-- 심사 기준 패널 -->
+  <div class="criteria-panel">
+    <div class="crit-toggle-row" onclick="toggleCriteria()">
+      <div class="crit-label"><i class="ti ti-adjustments" aria-hidden="true"></i> 심사 기준 설정 (선택사항)</div>
+      <i class="ti ti-chevron-down crit-chevron" id="critChevron" aria-hidden="true"></i>
+    </div>
+
+    <div class="crit-body" id="critBody">
+      <!-- 직접 입력 -->
+      <div class="crit-block">
+        <div class="crit-label"><i class="ti ti-pencil" aria-hidden="true"></i> 나만의 심사 기준</div>
+        <textarea class="crit-textarea" id="customCriteria" placeholder="예: 여행 분위기가 잘 느껴지는 사진을 우선해주세요 / 흑백 톤의 감성을 중시해주세요 / 배경보다 인물 표정에 집중해주세요"></textarea>
+        <div class="crit-hint">비워두면 기본 기준(구도·조명·인물·선명도)으로만 평가합니다.</div>
+      </div>
+
+      <!-- 키워드 선택 -->
+      <div class="crit-block">
+        <div class="crit-label"><i class="ti ti-tags" aria-hidden="true"></i> 평가 키워드 선택 (복수 선택 가능)</div>
+        <div class="kw-grid" id="keywordGrid"></div>
+      </div>
+
+      <!-- 가상 심사위원 -->
+      <div class="crit-block">
+        <div class="crit-label"><i class="ti ti-users" aria-hidden="true"></i> 심사위원 선택</div>
+        <div class="judge-grid" id="judgeGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div id="uploadSection">
+    <div class="upload-zone" id="dropZone">
+      <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(this.files)">
+      <i class="ti ti-photo-plus upload-icon" aria-hidden="true"></i>
+      <div class="upload-title">사진을 드래그하거나 클릭해서 업로드</div>
+      <div class="upload-sub">JPG, PNG 등 — 여러 장 동시 업로드 가능 (최소 2장 권장)</div>
+    </div>
+  </div>
+
+  <div class="thumb-grid" id="thumbGrid" style="display:none"></div>
+
+  <button class="btn-judge" id="judgeBtn" style="display:none" onclick="startJudging()">
+    <i class="ti ti-award" aria-hidden="true"></i> AI 심사 시작하기
+  </button>
+
+  <div id="resultArea"></div>
+
+</div>
+
+<script>
+let uploadedFiles = []; // {id, file, dataUrl, base64, mediaType}
+let resultsData = null;
+
+// ── 심사 기준 데이터 ──
+const KEYWORDS = [
+  '구도', '조명/색감', '인물 표정', '스토리텔링', '독창성',
+  '분위기/감성', '디테일/선명도', '여백의 미', '컬러 매치', '순간 포착력'
+];
+let selectedKeywords = new Set();
+
+const JUDGES = [
+  { id: 'default',     icon: 'ti-award',          name: '기본 심사위원',     desc: '균형 잡힌 종합 평가' },
+  { id: 'fashion',      icon: 'ti-camera',         name: '패션 포토그래퍼',   desc: '스타일·포즈 중시' },
+  { id: 'documentary',  icon: 'ti-eye',            name: '다큐멘터리 사진가', desc: '진솔함·순간성 중시' },
+  { id: 'architecture', icon: 'ti-building',       name: '건축 비평가',       desc: '구조·공간감 중시' },
+  { id: 'art',          icon: 'ti-palette',        name: '예술 감독',         desc: '색감·미학적 완성도' },
+  { id: 'commercial',   icon: 'ti-briefcase',      name: '광고/커머셜 디렉터', desc: '시선 끄는 힘·완성도' },
+];
+let selectedJudge = 'default';
+
+function toggleCriteria() {
+  const body = document.getElementById('critBody');
+  const chevron = document.getElementById('critChevron');
+  body.classList.toggle('collapsed');
+  chevron.classList.toggle('open', !body.classList.contains('collapsed'));
+}
+
+function renderKeywordChips() {
+  const grid = document.getElementById('keywordGrid');
+  grid.innerHTML = KEYWORDS.map(k => `
+    <span class="kw-chip" data-kw="${k}" onclick="toggleKeyword('${k}', this)">${k}</span>
+  `).join('');
+}
+
+function toggleKeyword(kw, el) {
+  if (selectedKeywords.has(kw)) { selectedKeywords.delete(kw); el.classList.remove('on'); }
+  else { selectedKeywords.add(kw); el.classList.add('on'); }
+}
+
+function renderJudgeCards() {
+  const grid = document.getElementById('judgeGrid');
+  grid.innerHTML = JUDGES.map(j => `
+    <div class="judge-card${j.id===selectedJudge?' on':''}" data-judge="${j.id}" onclick="selectJudge('${j.id}')">
+      <div class="judge-card-icon"><i class="ti ${j.icon}" aria-hidden="true"></i></div>
+      <div class="judge-card-text">
+        <div class="judge-card-name">${j.name}</div>
+        <div class="judge-card-desc">${j.desc}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectJudge(id) {
+  selectedJudge = id;
+  document.querySelectorAll('.judge-card').forEach(c => c.classList.toggle('on', c.dataset.judge === id));
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  renderKeywordChips();
+  renderJudgeCards();
+});
+
+// ── API KEY ──
+function checkApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  const status = document.getElementById('apiKeyStatus');
+  if (key.startsWith('AIza') && key.length > 20) {
+    status.textContent = '입력됨'; status.className = 'apikey-status ok';
+  } else if (key.length > 0) {
+    status.textContent = '형식 확인'; status.className = 'apikey-status no';
+  } else {
+    status.textContent = '미입력'; status.className = 'apikey-status no';
+  }
+  localStorage.setItem('__photojudge_key', key);
+}
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('__photojudge_key');
+  if (saved) { document.getElementById('apiKeyInput').value = saved; checkApiKey(); }
+});
+
+// ── DRAG & DROP ──
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
+
+// ── FILE HANDLING ──
+async function handleFiles(files) {
+  const arr = Array.from(files).filter(f => f.type.startsWith('image/'));
+  for (const file of arr) {
+    const dataUrl = await fileToDataUrl(file); // 미리보기용 (원본)
+    const resized = await resizeImage(dataUrl, 1280); // API 전송용 (축소)
+    const base64 = resized.dataUrl.split(',')[1];
+    uploadedFiles.push({
+      id: 'f' + Math.random().toString(36).slice(2),
+      file, dataUrl, base64,
+      mediaType: resized.mediaType,
+      origName: file.name
+    });
+  }
+  renderThumbs();
+}
+
+function fileToDataUrl(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+// 큰 이미지를 API 전송 전에 적정 크기로 축소 (긴 변 기준 maxDim px, JPEG 변환)
+function resizeImage(dataUrl, maxDim) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width <= maxDim && height <= maxDim) {
+        // 이미 작으면 그대로 사용 (단, 포맷 통일을 위해 JPEG 변환은 생략 가능)
+        resolve({ dataUrl, mediaType: dataUrl.match(/data:(.*?);/)[1] });
+        return;
+      }
+      const scale = maxDim / Math.max(width, height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve({ dataUrl: canvas.toDataURL('image/jpeg', 0.85), mediaType: 'image/jpeg' });
+    };
+    img.onerror = () => resolve({ dataUrl, mediaType: dataUrl.match(/data:(.*?);/)[1] }); // 실패 시 원본 사용
+    img.src = dataUrl;
+  });
+}
+
+function renderThumbs() {
+  const grid = document.getElementById('thumbGrid');
+  const btn = document.getElementById('judgeBtn');
+  if (uploadedFiles.length === 0) {
+    grid.style.display = 'none'; btn.style.display = 'none';
+    return;
+  }
+  grid.style.display = 'grid';
+  btn.style.display = uploadedFiles.length >= 2 ? 'flex' : 'none';
+  grid.innerHTML = uploadedFiles.map(f => `
+    <div class="thumb-item">
+      <img src="${f.dataUrl}" alt="${f.origName}">
+      <button class="thumb-remove" onclick="removeFile('${f.id}')"><i class="ti ti-x" aria-hidden="true"></i></button>
+      <div class="thumb-name">${f.origName}</div>
+    </div>`).join('');
+}
+
+function removeFile(id) {
+  uploadedFiles = uploadedFiles.filter(f => f.id !== id);
+  renderThumbs();
+}
+
+// ── JUDGING ──
+async function startJudging() {
+  const apiKey = document.getElementById('apiKeyInput').value.trim();
+  if (!(apiKey.startsWith('AIza') && apiKey.length > 20)) {
+    showError('올바른 Google AI (Gemini) API 키를 입력해주세요. (AIza로 시작, console.cloud.google.com 또는 aistudio.google.com 에서 발급)');
+    return;
+  }
+  if (uploadedFiles.length < 2) {
+    showError('비교 심사를 위해 최소 2장 이상의 사진을 업로드해주세요.');
+    return;
+  }
+
+  document.getElementById('judgeBtn').disabled = true;
+  showProgress('AI가 사진들을 분석하고 있습니다…', 15);
+
+  // 60초 타임아웃 — 응답이 없으면 멈추지 않고 에러로 전환
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+  let progressTimer = null;
+
+  try {
+    const imageParts = uploadedFiles.map((f, i) => ([
+      { text: `[사진 ${i+1}] 파일명: ${f.origName}` },
+      { inline_data: { mime_type: f.mediaType, data: f.base64 } }
+    ])).flat();
+
+    showProgress('이미지를 업로드하는 중…', 30);
+
+    const systemPrompt = `당신은 전문 사진 심사위원입니다. 사용자가 올린 여러 장의 이미지를 비교 심사합니다.
+이미지에는 인물 사진뿐 아니라 건축 다이어그램, 렌더링, 도면, 텍스트 패널 등이 포함될 수 있습니다.
+
+평가 기준은 "이미지 자체의 시각적 품질"입니다:
+- 인물이 있는 경우: 표정, 포즈, 자연스러움
+- 구도 (프레이밍, 균형, 시선 유도, 여백)
+- 조명/색감 (노출, 명암 대비, 색조의 완성도)
+- 선명도/디테일, 전체적인 완성도와 전달력
+
+인물이 없는 이미지(다이어그램, 렌더링, 도면 등)는 인물 점수를 평균값(70)으로 두고 나머지 기준으로 평가하세요.
+
+각 이미지에 어울리는 짧고 인상적인 한글 이름(닉네임, 4~12자)도 지어주세요.
+
+반드시 다음 JSON 형식으로만, 간결하게 응답하세요. 다른 텍스트는 절대 포함하지 마세요:
+{
+  "rankings": [
+    {
+      "photoIndex": 1,
+      "rank": 1,
+      "nickname": "이미지에 어울리는 한글 이름",
+      "totalScore": 92,
+      "reason": "이 순위인 이유를 1~2문장으로 간결하게 설명",
+      "tags": ["좋은 구도","선명한 디테일"],
+      "subScores": {"composition": 90, "lighting": 88, "portrait": 70, "sharpness": 92}
+    }
+  ]
+}
+photoIndex는 1부터 시작하는 사진 번호이며, 업로드된 모든 이미지에 대해 순위를 매겨주세요(전체 순위, rank 1이 최고). reason은 반드시 짧게 작성하세요.`;
+
+    const model = 'gemini-2.5-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+    // 진행률을 천천히 올려 "멈춘 것처럼" 보이지 않게 함
+    let fakePct = 30;
+    progressTimer = setInterval(() => {
+      fakePct = Math.min(fakePct + 3, 75);
+      showProgress('AI가 사진들을 분석하고 있습니다… (사진이 많거나 클수록 시간이 더 걸려요)', fakePct);
+    }, 1500);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: [{
+          role: 'user',
+          parts: [
+            { text: `아래 ${uploadedFiles.length}장의 사진을 사진 품질 기준으로 심사하고 순위를 매겨주세요.` },
+            ...imageParts
+          ]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 8192,
+          responseMimeType: 'application/json'
+        }
+      })
+    });
+
+    clearInterval(progressTimer);
+    clearTimeout(timeoutId);
+    showProgress('심사 결과를 정리하는 중…', 85);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      let friendly = `API 오류 (${response.status})`;
+      if (response.status === 400) friendly += ' — 요청 형식 오류 또는 이미지 용량이 너무 큽니다.';
+      if (response.status === 403) friendly += ' — API 키 권한 문제입니다. Gemini API가 활성화되어 있는지 확인해주세요.';
+      if (response.status === 429) friendly += ' — 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.';
+      throw new Error(`${friendly}\n${errText.slice(0,200)}`);
+    }
+
+    const data = await response.json();
+    const candidate = data.candidates && data.candidates[0];
+
+    if (!candidate) {
+      const blockReason = data.promptFeedback ? data.promptFeedback.blockReason : null;
+      throw new Error(blockReason
+        ? `AI가 이 요청을 처리하지 못했습니다 (차단 사유: ${blockReason}). 사진 구성을 바꿔서 다시 시도해주세요.`
+        : '응답이 비어 있습니다. 다시 시도해주세요.');
+    }
+
+    if (candidate.finishReason === 'MAX_TOKENS') {
+      throw new Error('응답이 너무 길어 잘렸습니다. 사진 수를 줄이거나(5장 이하 권장) 다시 시도해주세요.');
+    }
+    if (candidate.finishReason === 'SAFETY' || candidate.finishReason === 'RECITATION') {
+      throw new Error(`AI 안전 정책에 의해 응답이 차단되었습니다 (${candidate.finishReason}). 다른 사진으로 시도해주세요.`);
+    }
+
+    const textBlock = candidate.content && candidate.content.parts
+      ? candidate.content.parts.find(p => p.text)
+      : null;
+    if (!textBlock) {
+      throw new Error(`AI 응답에서 텍스트를 찾을 수 없습니다. (종료 사유: ${candidate.finishReason || 'UNKNOWN'})`);
+    }
+
+    let jsonStr = textBlock.text.trim().replace(/```json|```/g, '').trim();
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      throw new Error('AI 응답을 해석하지 못했습니다. 사진 수를 줄이고 다시 시도해주세요.');
+    }
+
+    if (!parsed.rankings || !parsed.rankings.length) {
+      throw new Error('심사 결과가 비어 있습니다. 다시 시도해주세요.');
+    }
+
+    showProgress('완료!', 100);
+    setTimeout(() => {
+      resultsData = parsed;
+      renderResults(parsed);
+    }, 300);
+
+  } catch (e) {
+    clearInterval(progressTimer);
+    clearTimeout(timeoutId);
+    console.error(e);
+    if (e.name === 'AbortError') {
+      showError('응답 시간이 너무 오래 걸려 요청을 중단했습니다 (60초 초과).<br>사진 수를 줄이거나(5장 이하 권장), 사진 용량을 줄여서 다시 시도해주세요.');
+    } else {
+      showError('심사 중 오류가 발생했습니다: ' + e.message.replace(/\n/g, '<br>'));
+    }
+  } finally {
+    document.getElementById('judgeBtn').disabled = false;
+  }
+}
+
+// ── UI: PROGRESS / ERROR ──
+function showProgress(text, pct) {
+  document.getElementById('resultArea').innerHTML = `
+    <div class="progress-wrap">
+      <div class="progress-spinner"></div>
+      <div class="progress-text">${text}</div>
+      <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+}
+
+function showError(msg) {
+  document.getElementById('resultArea').innerHTML = `
+    <div class="error-box">
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      <div>${msg}</div>
+    </div>`;
+}
+
+// ── RESULTS RENDER ──
+const MEDAL_EMOJI = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
+function renderResults(data) {
+  const rankings = (data.rankings || []).sort((a,b) => a.rank - b.rank);
+  const top5 = rankings.slice(0, 5);
+  const rest = rankings.slice(5);
+
+  const cardsHtml = top5.map(r => {
+    const photo = uploadedFiles[r.photoIndex - 1];
+    if (!photo) return '';
+    const subScores = r.subScores || {};
+    const subEntries = Object.entries(subScores);
+    const labelMap = { composition: '구도', lighting: '조명', portrait: '인물', sharpness: '선명도' };
+
+    return `
+    <div class="rank-card r${r.rank}">
+      <div class="rank-medal m${r.rank}">${MEDAL_EMOJI[r.rank] || ('#'+r.rank)}</div>
+      <div class="rank-photo"><img src="${photo.dataUrl}" alt="${r.nickname}"></div>
+      <div class="rank-info">
+        <div class="rank-name">${r.nickname || photo.origName}</div>
+        <div class="rank-score-row">
+          <span class="rank-score">${r.totalScore ?? '-'}점</span>
+          <span class="rank-orig-name">원본: ${photo.origName}</span>
+        </div>
+        <div class="rank-reason">${r.reason || ''}</div>
+        ${r.tags && r.tags.length ? `<div class="rank-tags">${r.tags.map(t=>`<span class="rank-tag">${t}</span>`).join('')}</div>` : ''}
+        ${subEntries.length ? `
+        <div class="sub-scores">
+          ${subEntries.map(([k,v]) => `
+            <div class="sub-score">
+              <span>${labelMap[k]||k}</span>
+              <div class="sub-score-bar"><div class="sub-score-fill" style="width:${v}%"></div></div>
+            </div>`).join('')}
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const restHtml = rest.length ? `
+    <div class="others-section">
+      <div class="others-label">순위 밖 ${rest.length}장</div>
+      <div class="others-grid">
+        ${rest.map(r => {
+          const photo = uploadedFiles[r.photoIndex - 1];
+          if (!photo) return '';
+          return `<div class="other-item">
+            <img src="${photo.dataUrl}" alt="${r.nickname}">
+            <div class="other-item-info">
+              <div class="other-item-name">${r.nickname}</div>
+              <div class="other-item-score">${r.totalScore ?? '-'}점 · ${r.rank}위</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : '';
+
+  document.getElementById('resultArea').innerHTML = `
+    <div class="results-header">
+      <div class="results-title">심사 결과 <span>TOP ${top5.length}</span></div>
+    </div>
+    <div class="rank-list">${cardsHtml}</div>
+    ${restHtml}
+    <div class="reset-row">
+      <button class="btn-ghost" onclick="resetAll()"><i class="ti ti-refresh" aria-hidden="true"></i> 새로 심사하기</button>
+    </div>`;
+}
+
+function resetAll() {
+  uploadedFiles = [];
+  resultsData = null;
+  renderThumbs();
+  document.getElementById('resultArea').innerHTML = '';
+  document.getElementById('fileInput').value = '';
+}
+</script>
+</body>
+</html>
