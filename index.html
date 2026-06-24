@@ -195,6 +195,96 @@ a{color:var(--gold)}
 /* RESET */
 .reset-row{display:flex;justify-content:center;margin-top:10px}
 
+/* ── TOP NAV TABS (심사하기 / 기록보기) ── */
+.top-nav{display:flex;gap:8px;justify-content:center;margin-bottom:4px}
+.top-nav-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700;
+  cursor:pointer;border:.5px solid var(--bd2);background:var(--bg2);
+  color:var(--cream2);transition:all .15s;font-family:inherit
+}
+.top-nav-btn.on{background:var(--gold3);border-color:var(--goldb);color:var(--gold)}
+.top-nav-btn:not(.on):hover{border-color:var(--cream3)}
+
+/* ── HISTORY VIEW ── */
+.history-empty{
+  text-align:center;padding:60px 20px;color:var(--cream3);
+  display:flex;flex-direction:column;align-items:center;gap:12px
+}
+.history-empty i{font-size:40px;color:var(--cream3)}
+
+.history-day-group{display:flex;flex-direction:column;gap:12px}
+.history-day-header{
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;font-weight:800;color:var(--gold);
+  padding:4px 0
+}
+.history-day-header .day-line{flex:1;height:1px;background:var(--bd2)}
+.history-day-count{font-size:11px;color:var(--cream3);font-weight:500;font-family:var(--mono)}
+
+.history-session{
+  background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--r2);
+  padding:14px 16px;display:flex;flex-direction:column;gap:10px
+}
+.history-session-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.history-session-meta{display:flex;flex-direction:column;gap:2px;min-width:0}
+.history-session-time{font-size:11px;color:var(--cream3);font-family:var(--mono)}
+.history-session-judge{font-size:12px;color:var(--cream2)}
+.history-session-judge b{color:var(--gold)}
+.history-session-actions{display:flex;gap:6px;flex-shrink:0}
+.history-icon-btn{
+  width:30px;height:30px;border-radius:8px;border:.5px solid var(--bd2);
+  background:var(--bg3);color:var(--cream2);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .15s;font-size:14px
+}
+.history-icon-btn:hover{border-color:var(--goldb);color:var(--gold)}
+.history-icon-btn.danger:hover{border-color:rgba(224,98,92,0.4);color:var(--err)}
+
+.history-thumb-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.history-thumb-row::-webkit-scrollbar{height:4px}
+.history-thumb-row::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+.history-thumb{
+  position:relative;width:70px;height:70px;border-radius:8px;overflow:hidden;
+  flex-shrink:0;border:1.5px solid var(--bd2);cursor:pointer
+}
+.history-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.history-thumb-rank{
+  position:absolute;top:2px;left:2px;font-size:9px;font-weight:800;
+  background:rgba(0,0,0,0.7);color:var(--gold);border-radius:4px;padding:1px 5px;font-family:var(--mono)
+}
+
+/* CONFIRM DELETE MODAL */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.6);
+  display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px
+}
+.modal-box{
+  background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--r2);
+  padding:22px;max-width:340px;width:100%;display:flex;flex-direction:column;gap:14px
+}
+.modal-title{font-size:15px;font-weight:800;color:var(--cream)}
+.modal-desc{font-size:13px;color:var(--cream2);line-height:1.6}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+.modal-btn{
+  padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;
+  cursor:pointer;border:.5px solid var(--bd2);background:var(--bg3);
+  color:var(--cream2);font-family:inherit;transition:all .15s
+}
+.modal-btn.danger{background:rgba(224,98,92,0.15);border-color:rgba(224,98,92,0.4);color:#F09595}
+.modal-btn.danger:hover{background:rgba(224,98,92,0.25)}
+.modal-btn.cancel:hover{border-color:var(--cream3)}
+
+/* DOWNLOAD BTN ON RANK CARD */
+.rank-photo{position:relative}
+.rank-photo-download{
+  position:absolute;bottom:6px;right:6px;width:28px;height:28px;border-radius:7px;
+  background:rgba(0,0,0,0.65);color:#fff;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:14px;transition:all .15s;backdrop-filter:blur(3px)
+}
+.rank-photo-download:hover{background:var(--gold);color:#15120D}
+
+.download-all-row{display:flex;justify-content:center;margin-top:4px}
+
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
@@ -235,7 +325,9 @@ a{color:var(--gold)}
 .kw-chip:hover:not(.on){border-color:var(--cream3)}
 
 /* JUDGE PERSONA SELECT */
-.judge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+.judge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;max-height:280px;overflow-y:auto;padding-right:4px}
+.judge-grid::-webkit-scrollbar{width:4px}
+.judge-grid::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
 .judge-card{
   display:flex;align-items:center;gap:10px;
   padding:10px 12px;border-radius:10px;cursor:pointer;
@@ -279,53 +371,83 @@ a{color:var(--gold)}
   <!-- API 키는 Vercel 환경 변수(GEMINI_API_KEY)에서 서버가 직접 읽습니다.
        브라우저에는 키가 절대 노출되지 않습니다. -->
 
-  <!-- 심사 기준 패널 -->
-  <div class="criteria-panel">
-    <div class="crit-toggle-row" onclick="toggleCriteria()">
-      <div class="crit-label"><i class="ti ti-adjustments" aria-hidden="true"></i> 심사 기준 설정 (선택사항)</div>
-      <i class="ti ti-chevron-down crit-chevron" id="critChevron" aria-hidden="true"></i>
-    </div>
-
-    <div class="crit-body" id="critBody">
-      <!-- 직접 입력 -->
-      <div class="crit-block">
-        <div class="crit-label"><i class="ti ti-pencil" aria-hidden="true"></i> 나만의 심사 기준</div>
-        <textarea class="crit-textarea" id="customCriteria" placeholder="예: 여행 분위기가 잘 느껴지는 사진을 우선해주세요 / 흑백 톤의 감성을 중시해주세요 / 배경보다 인물 표정에 집중해주세요"></textarea>
-        <div class="crit-hint">비워두면 기본 기준(구도·조명·인물·선명도)으로만 평가합니다.</div>
-      </div>
-
-      <!-- 키워드 선택 -->
-      <div class="crit-block">
-        <div class="crit-label"><i class="ti ti-tags" aria-hidden="true"></i> 평가 키워드 선택 (복수 선택 가능)</div>
-        <div class="kw-grid" id="keywordGrid"></div>
-      </div>
-
-      <!-- 가상 심사위원 -->
-      <div class="crit-block">
-        <div class="crit-label"><i class="ti ti-users" aria-hidden="true"></i> 심사위원 선택</div>
-        <div class="judge-grid" id="judgeGrid"></div>
-      </div>
-    </div>
+  <div class="top-nav">
+    <button class="top-nav-btn on" id="navJudge" onclick="setMainView('judge')">
+      <i class="ti ti-award" aria-hidden="true"></i> 심사하기
+    </button>
+    <button class="top-nav-btn" id="navHistory" onclick="setMainView('history')">
+      <i class="ti ti-history" aria-hidden="true"></i> 기록 보기
+    </button>
   </div>
 
-  <!-- UPLOAD -->
-  <div id="uploadSection">
-    <div class="upload-zone" id="dropZone">
-      <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(this.files)">
-      <i class="ti ti-photo-plus upload-icon" aria-hidden="true"></i>
-      <div class="upload-title">사진을 드래그하거나 클릭해서 업로드</div>
-      <div class="upload-sub">JPG, PNG 등 — 여러 장 동시 업로드 가능 (최소 2장 권장)</div>
+  <!-- ════════ 심사하기 뷰 ════════ -->
+  <div id="judgeView" style="display:flex;flex-direction:column;gap:28px">
+
+    <!-- 심사 기준 패널 -->
+    <div class="criteria-panel">
+      <div class="crit-toggle-row" onclick="toggleCriteria()">
+        <div class="crit-label"><i class="ti ti-adjustments" aria-hidden="true"></i> 심사 기준 설정 (선택사항)</div>
+        <i class="ti ti-chevron-down crit-chevron" id="critChevron" aria-hidden="true"></i>
+      </div>
+
+      <div class="crit-body" id="critBody">
+        <!-- 직접 입력 -->
+        <div class="crit-block">
+          <div class="crit-label"><i class="ti ti-pencil" aria-hidden="true"></i> 나만의 심사 기준</div>
+          <textarea class="crit-textarea" id="customCriteria" placeholder="예: 여행 분위기가 잘 느껴지는 사진을 우선해주세요 / 흑백 톤의 감성을 중시해주세요 / 배경보다 인물 표정에 집중해주세요"></textarea>
+          <div class="crit-hint">비워두면 기본 기준(구도·조명·인물·선명도)으로만 평가합니다.</div>
+        </div>
+
+        <!-- 키워드 선택 -->
+        <div class="crit-block">
+          <div class="crit-label"><i class="ti ti-tags" aria-hidden="true"></i> 평가 키워드 선택 (복수 선택 가능)</div>
+          <div class="kw-grid" id="keywordGrid"></div>
+        </div>
+
+        <!-- 가상 심사위원 -->
+        <div class="crit-block">
+          <div class="crit-label"><i class="ti ti-users" aria-hidden="true"></i> 심사위원 선택 (20가지 스타일)</div>
+          <div class="judge-grid" id="judgeGrid"></div>
+        </div>
+      </div>
     </div>
+
+    <!-- UPLOAD -->
+    <div id="uploadSection">
+      <div class="upload-zone" id="dropZone">
+        <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(this.files)">
+        <i class="ti ti-photo-plus upload-icon" aria-hidden="true"></i>
+        <div class="upload-title">사진을 드래그하거나 클릭해서 업로드</div>
+        <div class="upload-sub">JPG, PNG 등 — 여러 장 동시 업로드 가능 (최소 2장 권장)</div>
+      </div>
+    </div>
+
+    <div class="thumb-grid" id="thumbGrid" style="display:none"></div>
+
+    <button class="btn-judge" id="judgeBtn" style="display:none" onclick="startJudging()">
+      <i class="ti ti-award" aria-hidden="true"></i> AI 심사 시작하기
+    </button>
+
+    <div id="resultArea"></div>
   </div>
 
-  <div class="thumb-grid" id="thumbGrid" style="display:none"></div>
+  <!-- ════════ 기록 보기 뷰 ════════ -->
+  <div id="historyView" style="display:none">
+    <div id="historyArea"></div>
+  </div>
 
-  <button class="btn-judge" id="judgeBtn" style="display:none" onclick="startJudging()">
-    <i class="ti ti-award" aria-hidden="true"></i> AI 심사 시작하기
-  </button>
+</div>
 
-  <div id="resultArea"></div>
-
+<!-- 삭제 확인 모달 -->
+<div class="modal-overlay" id="confirmModal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title" id="confirmTitle">정말 삭제할까요?</div>
+    <div class="modal-desc" id="confirmDesc">이 심사 기록은 복구할 수 없습니다.</div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeConfirmModal()">취소</button>
+      <button class="modal-btn danger" id="confirmDeleteBtn">삭제</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -340,12 +462,26 @@ const KEYWORDS = [
 let selectedKeywords = new Set();
 
 const JUDGES = [
-  { id: 'default',     icon: 'ti-award',          name: '기본 심사위원',     desc: '균형 잡힌 종합 평가' },
-  { id: 'fashion',      icon: 'ti-camera',         name: '패션 포토그래퍼',   desc: '스타일·포즈 중시' },
-  { id: 'documentary',  icon: 'ti-eye',            name: '다큐멘터리 사진가', desc: '진솔함·순간성 중시' },
-  { id: 'architecture', icon: 'ti-building',       name: '건축 비평가',       desc: '구조·공간감 중시' },
-  { id: 'art',          icon: 'ti-palette',        name: '예술 감독',         desc: '색감·미학적 완성도' },
-  { id: 'commercial',   icon: 'ti-briefcase',      name: '광고/커머셜 디렉터', desc: '시선 끄는 힘·완성도' },
+  { id: 'default',      icon: 'ti-award',        name: '기본 심사위원',       desc: '균형 잡힌 종합 평가' },
+  { id: 'fashion',       icon: 'ti-camera',       name: '패션 포토그래퍼',     desc: '스타일·포즈 중시' },
+  { id: 'documentary',   icon: 'ti-eye',          name: '다큐멘터리 사진가',   desc: '진솔함·순간성 중시' },
+  { id: 'architecture',  icon: 'ti-building',     name: '건축 비평가',         desc: '구조·공간감 중시' },
+  { id: 'art',           icon: 'ti-palette',      name: '예술 감독',           desc: '색감·미학적 완성도' },
+  { id: 'commercial',    icon: 'ti-briefcase',    name: '광고/커머셜 디렉터',  desc: '시선 끄는 힘·완성도' },
+  { id: 'wedding',       icon: 'ti-heart',        name: '웨딩 사진가',         desc: '감정·자연스러움' },
+  { id: 'portrait',      icon: 'ti-user-circle',  name: '인물 사진 전문가',    desc: '표정·눈빛·피부톤' },
+  { id: 'landscape',     icon: 'ti-mountain',     name: '풍경 사진 거장',      desc: '스케일감·레이어 구성' },
+  { id: 'street',        icon: 'ti-walk',         name: '스트리트 포토그래퍼', desc: '우연성·결정적 순간' },
+  { id: 'food',          icon: 'ti-tools-kitchen-2', name: '푸드 포토그래퍼',  desc: '질감·식욕 자극도' },
+  { id: 'fineart',       icon: 'ti-brush',        name: '순수 미술 작가',      desc: '개념적 깊이·실험성' },
+  { id: 'sports',        icon: 'ti-run',          name: '스포츠 사진 전문가',  desc: '동작 포착·역동성' },
+  { id: 'travel',        icon: 'ti-plane',        name: '여행 사진 작가',      desc: '분위기·이야기성' },
+  { id: 'minimal',       icon: 'ti-minus',        name: '미니멀리즘 사진가',   desc: '여백·절제된 균형' },
+  { id: 'vintage',       icon: 'ti-film',         name: '필름/빈티지 전문가',  desc: '톤·질감·시간감' },
+  { id: 'instagram',     icon: 'ti-hash',         name: 'SNS 트렌드 큐레이터', desc: '트렌디함·공유 매력' },
+  { id: 'blackwhite',    icon: 'ti-contrast',     name: '흑백 사진 마스터',    desc: '명암 대비·톤의 깊이' },
+  { id: 'cinematic',     icon: 'ti-movie',        name: '시네마토그래퍼',      desc: '영화적 분위기·색보정' },
+  { id: 'harsh',         icon: 'ti-mood-sad',     name: '냉철한 비평가',       desc: '결함을 짚는 엄격한 평가' },
 ];
 let selectedJudge = 'default';
 
@@ -570,22 +706,33 @@ function showError(msg) {
 // ── RESULTS RENDER ──
 const MEDAL_EMOJI = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
-function renderResults(data) {
+function renderResults(data, opts) {
+  opts = opts || {};
   const rankings = (data.rankings || []).sort((a,b) => a.rank - b.rank);
   const top5 = rankings.slice(0, 5);
   const rest = rankings.slice(5);
 
+  // photos: 기록보기에서 다시 렌더링할 때는 opts.photos(저장된 dataUrl 배열)를 쓰고,
+  // 방금 심사한 경우엔 uploadedFiles를 그대로 씀
+  const photosSrc = opts.photos || uploadedFiles;
+
   const cardsHtml = top5.map(r => {
-    const photo = uploadedFiles[r.photoIndex - 1];
+    const photo = photosSrc[r.photoIndex - 1];
     if (!photo) return '';
     const subScores = r.subScores || {};
     const subEntries = Object.entries(subScores);
     const labelMap = { composition: '구도', lighting: '조명', portrait: '인물', sharpness: '선명도' };
+    const safeName = (r.nickname || photo.origName || 'photo').replace(/[^\w가-힣\s-]/g, '');
 
     return `
     <div class="rank-card r${r.rank}">
       <div class="rank-medal m${r.rank}">${MEDAL_EMOJI[r.rank] || ('#'+r.rank)}</div>
-      <div class="rank-photo"><img src="${photo.dataUrl}" alt="${r.nickname}"></div>
+      <div class="rank-photo">
+        <img src="${photo.dataUrl}" alt="${r.nickname}">
+        <div class="rank-photo-download" title="이 사진 저장하기" onclick="downloadImage('${photo.dataUrl}', '${r.rank}위_${safeName}')">
+          <i class="ti ti-download" aria-hidden="true"></i>
+        </div>
+      </div>
       <div class="rank-info">
         <div class="rank-name">${r.nickname || photo.origName}</div>
         <div class="rank-score-row">
@@ -611,7 +758,7 @@ function renderResults(data) {
       <div class="others-label">순위 밖 ${rest.length}장</div>
       <div class="others-grid">
         ${rest.map(r => {
-          const photo = uploadedFiles[r.photoIndex - 1];
+          const photo = photosSrc[r.photoIndex - 1];
           if (!photo) return '';
           return `<div class="other-item">
             <img src="${photo.dataUrl}" alt="${r.nickname}">
@@ -630,9 +777,19 @@ function renderResults(data) {
     </div>
     <div class="rank-list">${cardsHtml}</div>
     ${restHtml}
+    <div class="download-all-row">
+      <button class="btn-ghost" onclick="downloadAllImages(${JSON.stringify(top5.map(r=>r.rank)).replace(/"/g,'&quot;')})">
+        <i class="ti ti-download" aria-hidden="true"></i> TOP ${top5.length} 전체 저장
+      </button>
+    </div>
     <div class="reset-row">
       <button class="btn-ghost" onclick="resetAll()"><i class="ti ti-refresh" aria-hidden="true"></i> 새로 심사하기</button>
     </div>`;
+
+  // 새로 심사한 결과라면 기록에 저장 (기록보기에서 다시 그릴 때는 저장 안 함)
+  if (!opts.fromHistory) {
+    saveToHistory(data);
+  }
 }
 
 function resetAll() {
@@ -641,6 +798,213 @@ function resetAll() {
   renderThumbs();
   document.getElementById('resultArea').innerHTML = '';
   document.getElementById('fileInput').value = '';
+}
+
+// ═══════════════════════════════════════════
+//  이미지 다운로드 (핸드폰/PC 저장)
+// ═══════════════════════════════════════════
+function downloadImage(dataUrl, filename) {
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = `${filename}.jpg`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function downloadAllImages(ranks) {
+  // 모바일 브라우저는 다중 다운로드 시 차단될 수 있어 약간의 지연을 둠
+  const cards = document.querySelectorAll('.rank-photo-download');
+  cards.forEach((btn, i) => {
+    setTimeout(() => btn.click(), i * 350);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  날짜별 기록 누적 (localStorage)
+// ═══════════════════════════════════════════
+const HISTORY_KEY = '__photojudge_history_v1';
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+
+function saveHistoryList(list) {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+  } catch(e) {
+    console.warn('기록 저장 실패 (저장 공간 부족 가능):', e);
+  }
+}
+
+function saveToHistory(data) {
+  const history = loadHistory();
+  const judgeInfo = JUDGES.find(j => j.id === selectedJudge) || JUDGES[0];
+
+  const entry = {
+    id: 'h' + Date.now() + Math.random().toString(36).slice(2,6),
+    timestamp: Date.now(),
+    judgeId: selectedJudge,
+    judgeName: judgeInfo.name,
+    customCriteria: document.getElementById('customCriteria').value || '',
+    keywords: Array.from(selectedKeywords),
+    rankings: data.rankings,
+    photos: uploadedFiles.map(f => ({ dataUrl: f.dataUrl, origName: f.origName })) // 이미지 포함 영구 저장
+  };
+
+  history.unshift(entry); // 최신이 맨 위
+  saveHistoryList(history);
+}
+
+function deleteHistoryEntry(id) {
+  const history = loadHistory().filter(h => h.id !== id);
+  saveHistoryList(history);
+  renderHistoryView();
+}
+
+function clearAllHistory() {
+  saveHistoryList([]);
+  renderHistoryView();
+}
+
+function fmtDateKey(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// ═══════════════════════════════════════════
+//  탭 전환 (심사하기 / 기록보기)
+// ═══════════════════════════════════════════
+function setMainView(view) {
+  document.getElementById('navJudge').classList.toggle('on', view === 'judge');
+  document.getElementById('navHistory').classList.toggle('on', view === 'history');
+  document.getElementById('judgeView').style.display = view === 'judge' ? 'flex' : 'none';
+  if (view === 'judge') document.getElementById('judgeView').style.flexDirection = 'column';
+  document.getElementById('historyView').style.display = view === 'history' ? 'block' : 'none';
+  if (view === 'history') renderHistoryView();
+}
+
+function renderHistoryView() {
+  const history = loadHistory();
+  const area = document.getElementById('historyArea');
+
+  if (!history.length) {
+    area.innerHTML = `
+      <div class="history-empty">
+        <i class="ti ti-photo-off" aria-hidden="true"></i>
+        <div>아직 심사 기록이 없습니다.</div>
+        <div style="font-size:12px">심사를 진행하면 날짜별로 자동 기록됩니다.</div>
+      </div>`;
+    return;
+  }
+
+  // 날짜별 그룹핑
+  const groups = {};
+  history.forEach(h => {
+    const key = fmtDateKey(h.timestamp);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(h);
+  });
+
+  const dayKeys = Object.keys(groups).sort((a,b) => b.localeCompare(a)); // 최신 날짜 먼저
+
+  const html = dayKeys.map(day => {
+    const sessions = groups[day];
+    const sessionsHtml = sessions.map(s => {
+      const top = (s.rankings||[]).sort((a,b)=>a.rank-b.rank).slice(0,5);
+      const thumbsHtml = top.map(r => {
+        const photo = s.photos[r.photoIndex - 1];
+        if (!photo) return '';
+        return `<div class="history-thumb" onclick="viewHistorySession('${s.id}')">
+          <img src="${photo.dataUrl}" alt="${r.nickname||''}">
+          <span class="history-thumb-rank">${r.rank}위</span>
+        </div>`;
+      }).join('');
+
+      return `
+      <div class="history-session">
+        <div class="history-session-head">
+          <div class="history-session-meta">
+            <div class="history-session-time">${fmtTime(s.timestamp)} · 사진 ${s.photos.length}장</div>
+            <div class="history-session-judge">심사위원: <b>${s.judgeName}</b>${s.keywords && s.keywords.length ? ' · ' + s.keywords.join(', ') : ''}</div>
+          </div>
+          <div class="history-session-actions">
+            <div class="history-icon-btn" title="자세히 보기" onclick="viewHistorySession('${s.id}')">
+              <i class="ti ti-eye" aria-hidden="true"></i>
+            </div>
+            <div class="history-icon-btn danger" title="삭제" onclick="askDeleteHistory('${s.id}')">
+              <i class="ti ti-trash" aria-hidden="true"></i>
+            </div>
+          </div>
+        </div>
+        <div class="history-thumb-row">${thumbsHtml}</div>
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="history-day-group">
+      <div class="history-day-header">
+        <span>${day}</span>
+        <span class="day-line"></span>
+        <span class="history-day-count">${sessions.length}건</span>
+      </div>
+      ${sessionsHtml}
+    </div>`;
+  }).join('');
+
+  area.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <button class="btn-ghost" onclick="askClearAllHistory()">
+        <i class="ti ti-trash-x" aria-hidden="true"></i> 전체 기록 삭제
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:22px">${html}</div>`;
+}
+
+function viewHistorySession(id) {
+  const history = loadHistory();
+  const session = history.find(h => h.id === id);
+  if (!session) return;
+  setMainView('judge');
+  // 심사하기 뷰에서 결과만 다시 그려줌 (업로드 영역은 그대로 둠)
+  renderResults({ rankings: session.rankings }, { photos: session.photos, fromHistory: true });
+  document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── 삭제 확인 모달 ──
+let pendingDeleteAction = null;
+
+function askDeleteHistory(id) {
+  pendingDeleteAction = () => deleteHistoryEntry(id);
+  document.getElementById('confirmTitle').textContent = '이 기록을 삭제할까요?';
+  document.getElementById('confirmDesc').textContent = '선택한 심사 기록과 사진이 삭제되며 복구할 수 없습니다.';
+  openConfirmModal();
+}
+
+function askClearAllHistory() {
+  pendingDeleteAction = () => clearAllHistory();
+  document.getElementById('confirmTitle').textContent = '전체 기록을 삭제할까요?';
+  document.getElementById('confirmDesc').textContent = '저장된 모든 날짜의 심사 기록과 사진이 삭제되며 복구할 수 없습니다.';
+  openConfirmModal();
+}
+
+function openConfirmModal() {
+  document.getElementById('confirmModal').style.display = 'flex';
+  document.getElementById('confirmDeleteBtn').onclick = () => {
+    if (pendingDeleteAction) pendingDeleteAction();
+    closeConfirmModal();
+  };
+}
+function closeConfirmModal() {
+  document.getElementById('confirmModal').style.display = 'none';
+  pendingDeleteAction = null;
 }
 </script>
 </body>
