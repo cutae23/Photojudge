@@ -67,6 +67,13 @@ a{color:var(--gold)}
 .apikey-status{font-size:11px;padding:3px 9px;border-radius:6px;font-family:var(--mono);flex-shrink:0}
 .apikey-status.ok{background:rgba(76,175,110,0.15);color:#7DD89A}
 .apikey-status.no{background:rgba(224,98,92,0.12);color:#F09595}
+.apikey-toggle{
+  background:transparent;border:none;color:var(--cream3);
+  cursor:pointer;font-size:14px;flex-shrink:0;padding:2px
+}
+.apikey-toggle:hover{color:var(--gold)}
+.apikey-hint{font-size:11px;color:var(--cream3);line-height:1.6;margin-top:6px}
+.apikey-hint a{color:var(--gold);text-decoration:underline}
 
 /* THUMBNAIL GRID (업로드 후, 분석 전) */
 .thumb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
@@ -368,8 +375,20 @@ a{color:var(--gold)}
   </div>
 
   <!-- API KEY -->
-  <!-- API 키는 Vercel 환경 변수(GEMINI_API_KEY)에서 서버가 직접 읽습니다.
-       브라우저에는 키가 절대 노출되지 않습니다. -->
+  <div class="apikey-bar">
+    <i class="ti ti-key" aria-hidden="true"></i>
+    <input type="password" id="apiKeyInput" placeholder="개인 Gemini API 키 (선택) — 비워두면 서버에 설정된 키를 사용합니다" oninput="checkApiKey()">
+    <button class="apikey-toggle" id="apikeyToggleBtn" onclick="toggleApiKeyVisibility()" title="키 보이기/숨기기">
+      <i class="ti ti-eye" id="apikeyEyeIcon" aria-hidden="true"></i>
+    </button>
+    <span class="apikey-status no" id="apiKeyStatus">미입력</span>
+  </div>
+  <div class="apikey-hint">
+    <i class="ti ti-info-circle" aria-hidden="true"></i>
+    내 개인 Gemini 키로 직접 심사하고 싶다면 위에 입력하세요. 키는 이 브라우저(localStorage)에만 저장되고, 요청할 때만 서버로 전달되어 호출에 사용됩니다.
+    키가 없다면 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>에서 무료로 발급받을 수 있습니다.
+    비워두면 서버 환경변수(<code>GEMINI_API_KEY</code>)로 동작합니다.
+  </div>
 
   <div class="top-nav">
     <button class="top-nav-btn on" id="navJudge" onclick="setMainView('judge')">
@@ -527,7 +546,41 @@ window.addEventListener('DOMContentLoaded', () => {
   renderJudgeCards();
 });
 
-// API 키는 서버(/api/judge)에서만 다루므로 클라이언트에는 관련 로직이 없습니다.
+// ── 개인 API 키 (선택사항) ──
+// 키는 이 브라우저(localStorage)에만 저장됩니다. 요청 시에만 서버로 전달되어
+// 서버가 그 키로 Gemini를 호출합니다. 비워두면 서버의 GEMINI_API_KEY를 사용합니다.
+const API_KEY_STORAGE = '__photojudge_user_key';
+
+function checkApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  const status = document.getElementById('apiKeyStatus');
+  if (key.length === 0) {
+    status.textContent = '서버 키 사용'; status.className = 'apikey-status no';
+  } else if (key.startsWith('AIza') && key.length > 20) {
+    status.textContent = '내 키 사용'; status.className = 'apikey-status ok';
+  } else {
+    status.textContent = '형식 확인'; status.className = 'apikey-status no';
+  }
+  try { localStorage.setItem(API_KEY_STORAGE, key); } catch(e) {}
+}
+
+function toggleApiKeyVisibility() {
+  const input = document.getElementById('apiKeyInput');
+  const icon = document.getElementById('apikeyEyeIcon');
+  if (input.type === 'password') {
+    input.type = 'text'; icon.className = 'ti ti-eye-off';
+  } else {
+    input.type = 'password'; icon.className = 'ti ti-eye';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const saved = localStorage.getItem(API_KEY_STORAGE);
+    if (saved) { document.getElementById('apiKeyInput').value = saved; }
+  } catch(e) {}
+  checkApiKey();
+});
 
 // ── DRAG & DROP ──
 const dz = document.getElementById('dropZone');
@@ -615,6 +668,12 @@ async function startJudging() {
     return;
   }
 
+  const typedKey = document.getElementById('apiKeyInput').value.trim();
+  if (typedKey.length > 0 && !(typedKey.startsWith('AIza') && typedKey.length > 20)) {
+    showError('입력한 개인 API 키 형식이 올바르지 않습니다. (AIza로 시작) 비워두면 서버 키를 사용합니다.');
+    return;
+  }
+
   document.getElementById('judgeBtn').disabled = true;
   showProgress('AI가 사진들을 분석하고 있습니다…', 15);
 
@@ -626,6 +685,8 @@ async function startJudging() {
   try {
     showProgress('이미지를 업로드하는 중…', 30);
 
+    const userApiKey = document.getElementById('apiKeyInput').value.trim();
+
     const payload = {
       images: uploadedFiles.map(f => ({
         name: f.origName,
@@ -634,7 +695,8 @@ async function startJudging() {
       })),
       customCriteria: document.getElementById('customCriteria').value || '',
       keywords: Array.from(selectedKeywords),
-      judgeId: selectedJudge
+      judgeId: selectedJudge,
+      userApiKey: userApiKey || undefined // 비어있으면 서버가 자기 키(GEMINI_API_KEY)를 사용
     };
 
     // 진행률을 천천히 올려 "멈춘 것처럼" 보이지 않게 함
