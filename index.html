@@ -639,6 +639,27 @@ function resizeImage(dataUrl, maxDim) {
   });
 }
 
+// 기록(localStorage) 저장 전용 — 원본 포맷/크기와 무관하게 항상 작은 JPEG로 재인코딩해
+// localStorage 용량 한도(보통 5~10MB)에 걸리지 않도록 함
+function makeHistoryThumbnail(dataUrl, maxDim, quality) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      const scale = Math.min(maxDim / Math.max(width, height), 1);
+      width = Math.max(1, Math.round(width * scale));
+      height = Math.max(1, Math.round(height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality || 0.6));
+    };
+    img.onerror = () => resolve(null); // 실패 시 null → 호출 쪽에서 원본 fallback 처리
+    img.src = dataUrl;
+  });
+}
+
 function renderThumbs() {
   const grid = document.getElementById('thumbGrid');
   const btn = document.getElementById('judgeBtn');
@@ -837,6 +858,7 @@ function renderResults(data, opts) {
     <div class="results-header">
       <div class="results-title">심사 결과 <span>TOP ${top5.length}</span></div>
     </div>
+    ${opts.fromHistory ? `<div class="apikey-hint" style="margin-top:-6px"><i class="ti ti-info-circle" aria-hidden="true"></i> 기록에 저장된 사진은 용량 절약을 위한 저화질 미리보기입니다. 다운로드 시 화질이 낮을 수 있어요.</div>` : ''}
     <div class="rank-list">${cardsHtml}</div>
     ${restHtml}
     <div class="download-all-row">
@@ -850,7 +872,10 @@ function renderResults(data, opts) {
 
   // 새로 심사한 결과라면 기록에 저장 (기록보기에서 다시 그릴 때는 저장 안 함)
   if (!opts.fromHistory) {
-    saveToHistory(data);
+    saveToHistory(data).catch(e => {
+      console.error('기록 저장 중 오류:', e);
+      showHistorySaveWarning('심사 기록을 저장하는 중 오류가 발생했습니다.');
+    });
   }
 }
 
@@ -897,14 +922,42 @@ function loadHistory() {
 function saveHistoryList(list) {
   try {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    return { ok: true };
   } catch(e) {
-    console.warn('기록 저장 실패 (저장 공간 부족 가능):', e);
+    return { ok: false, error: e };
   }
 }
 
-function saveToHistory(data) {
+// localStorage 용량 초과 시: 가장 오래된 기록부터 지워가며 재시도
+function saveHistoryListWithEviction(list) {
+  let attempt = [...list];
+  let result = saveHistoryList(attempt);
+  let evicted = 0;
+  while (!result.ok && attempt.length > 1) {
+    attempt.pop(); // 가장 오래된 항목(배열 끝)부터 제거
+    evicted++;
+    result = saveHistoryList(attempt);
+  }
+  return { ok: result.ok, evicted, finalList: attempt };
+}
+
+async function saveToHistory(data) {
   const history = loadHistory();
   const judgeInfo = JUDGES.find(j => j.id === selectedJudge) || JUDGES[0];
+
+  // 기록에는 원본 대신 작은 썸네일(최대 240px, JPEG 60%)을 저장해 localStorage 용량을 절약합니다.
+  let photosForHistory;
+  try {
+    photosForHistory = await Promise.all(
+      uploadedFiles.map(async f => {
+        const thumbUrl = await makeHistoryThumbnail(f.dataUrl, 240, 0.6);
+        return { dataUrl: thumbUrl || f.dataUrl, origName: f.origName };
+      })
+    );
+  } catch (e) {
+    // 썸네일 생성이 실패하면 원본을 그대로 사용 (드문 경우)
+    photosForHistory = uploadedFiles.map(f => ({ dataUrl: f.dataUrl, origName: f.origName }));
+  }
 
   const entry = {
     id: 'h' + Date.now() + Math.random().toString(36).slice(2,6),
@@ -914,11 +967,27 @@ function saveToHistory(data) {
     customCriteria: document.getElementById('customCriteria').value || '',
     keywords: Array.from(selectedKeywords),
     rankings: data.rankings,
-    photos: uploadedFiles.map(f => ({ dataUrl: f.dataUrl, origName: f.origName })) // 이미지 포함 영구 저장
+    photos: photosForHistory
   };
 
   history.unshift(entry); // 최신이 맨 위
-  saveHistoryList(history);
+  const result = saveHistoryListWithEviction(history);
+
+  if (!result.ok) {
+    showHistorySaveWarning('이미지 용량이 너무 커서 이 심사 기록을 저장하지 못했습니다. 브라우저 저장 공간이 가득 찼을 수 있어요. "기록 보기"에서 오래된 기록을 정리한 뒤 다시 시도해보세요.');
+  } else if (result.evicted > 0) {
+    showHistorySaveWarning(`저장 공간이 부족해 가장 오래된 기록 ${result.evicted}건이 자동으로 삭제되고, 이번 결과는 저장되었습니다.`);
+  }
+}
+
+function showHistorySaveWarning(msg) {
+  const area = document.getElementById('resultArea');
+  if (!area) return;
+  const warn = document.createElement('div');
+  warn.className = 'error-box';
+  warn.style.marginTop = '14px';
+  warn.innerHTML = `<i class="ti ti-alert-triangle" aria-hidden="true"></i><div>${msg}</div>`;
+  area.appendChild(warn);
 }
 
 function deleteHistoryEntry(id) {
